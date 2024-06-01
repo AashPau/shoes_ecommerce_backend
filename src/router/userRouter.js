@@ -1,7 +1,9 @@
 import express from "express";
-import { createNewUser, getUserByEmail } from "../model/userModel.js";
+import { createNewUser, getUserByEmail } from "../model/user/userModel.js";
 import { comparePassword, hashPassword } from "../utils/bcrypt.js";
 import { newUserValidation } from "../middlewares/joivalidation.js";
+import { signAccessJWT, signRefreshJWT } from "../utils/jwt.js";
+import { auth } from "../middlewares/auth.js";
 
 const router = express.Router();
 
@@ -46,9 +48,14 @@ router.post("/login", async (req, res, next) => {
       //check if passwords match
       const isMatch = comparePassword(password, user.password);
       if (isMatch) {
+        //send tokens along with success and message in the json file
         return res.status(200).json({
           status: "success",
           message: "passwords match",
+          tokens: {
+            accessJWT: signAccessJWT({ email }),
+            refreshJWT: signRefreshJWT({ email }),
+          },
         });
       } else {
         return res.status(400).json({
@@ -62,6 +69,24 @@ router.post("/login", async (req, res, next) => {
         message: "user not found",
       });
     }
+  } catch (error) {
+    next(error);
+  }
+});
+
+//====================private controllers
+
+//return the user profile
+router.get("/", auth, (req, res, next) => {
+  try {
+    console.log(req);
+    req.userInfo.refreshJWT = undefined;
+    req.userInfo.__V = undefined;
+    res.json({
+      status: "success",
+      message: "User Profile",
+      user: req.userInfo,
+    });
   } catch (error) {
     next(error);
   }
