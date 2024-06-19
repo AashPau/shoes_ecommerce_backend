@@ -3,7 +3,7 @@ import cors from "cors";
 import morgan from "morgan";
 
 const app = express();
-const port = process.env.PORT || 8001;
+const port = process.env.PORT || 8000;
 
 import { connectDB } from "./src/config/dbConnect.js";
 connectDB();
